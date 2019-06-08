@@ -60,7 +60,7 @@ def benchmark_from_cfg(cfg):
     if 'effective_cache_size' in cfg:
         cfg['effective_cache_size'] = str(cfg['effective_cache_size'])+"GB"
     cfg.pop('shared_buffers',None)
-    times = runTpch.run_tpch(cfg)
+    times = runTpch.run_tpch(cfg,1)
     return sum(times.values())
 
 #logger = logging.getLogger("SVMExample")
