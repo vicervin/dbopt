@@ -13,8 +13,9 @@ BENCHMARK = 'tpch'
 SCALE_FACTOR = 1
 CONTAINER_NAME = f'{BENCHMARK}_{str(SCALE_FACTOR)}'
 DATA_PATH = "/home/ervin/Documents/Uni/Thesis/data_backups/"+CONTAINER_NAME
-#QUERIES = [14,2,9,#20,6,#17,#18,8,#21,13,#3,22,16,4,11,15,1,10,19,5,7,12]
-QUERIES = [14,2,9,6,8,13,3,22,16,4,11,15,1,10,19,5,7,12]
+#QUERIES = [14,2,9,#20,6,#17,#18,8,#21,13,3,22,16,4,11,15,1,10,19,5,7,12]
+QUERIES = [14,2,9,"20_rewritten",6,"17_rewritten",8,"21",13,3,22,16,4,11,15,1,10,19,5,7,12]
+#QUERIES = [14,2,9,6,8,13,3,22,16,4,11,15,1,10,19,5,7,12]
 
 confDict = {
     "max_parallel_workers" : "8" ,
@@ -34,6 +35,7 @@ confDict = {
 def run_tpch(confDict, scale_factor):
     try:
         #data_path = copy_data_dir(str_schema_scale)
+        stop_postgres()
         pg_container = start_postgres(scale_factor)
         set_config(confDict)
         times = run_queries()
@@ -133,12 +135,14 @@ def check_data(scale_factor):
             return False
     return True
 
-def pg_cmd(cmd, autocommit = False):
+def pg_cmd(cmd, autocommit = False, timeout=0):
     try:
         with psycopg2.connect(f'host={server} dbname={database} user={username} password={password}') as cnxn:
             if autocommit:
                 cnxn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT) 
             with cnxn.cursor() as cursor:
+                #if timeout > 0 :
+                #    cursor.execute(f'SET STATEMENT_TIMEOUT={self.timeout * 1000}')
                 cursor.execute(cmd)
                 if cursor.description is not None:
                     return cursor.fetchall()
@@ -215,5 +219,5 @@ def build_image(scale_factor):
     except docker.errors.APIError as e :
         print(e)
 
-#run_tpch(confDict,1)
-build_image(1)
+run_tpch(confDict,1)
+#build_image(1)

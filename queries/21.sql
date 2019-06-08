@@ -1,8 +1,8 @@
 -- using 1512813808 as a seed to the RNG
 
-ALTER SYSTEM SET work_mem = '1GB';
-ALTER SYSTEM SET max_parallel_workers = 3;
-SELECT pg_reload_conf();
+--ALTER SYSTEM SET work_mem = '1GB';
+--ALTER SYSTEM SET max_parallel_workers = 3;
+--SELECT pg_reload_conf();
 
 select
     s_name,
@@ -45,6 +45,6 @@ order by
     s_name
 limit 100;
 
-ALTER SYSTEM RESET work_mem;
-ALTER SYSTEM RESET max_parallel_workers;
-SELECT pg_reload_conf();
+--ALTER SYSTEM RESET work_mem;
+--ALTER SYSTEM RESET max_parallel_workers;
+--SELECT pg_reload_conf();
