@@ -3,16 +3,18 @@
 import math
 from subprocess import Popen, PIPE
 from concurrent.futures import ProcessPoolExecutor, as_completed
+import os
 
+FULL_PATH = os.path.dirname(os.path.abspath(__file__))
 
 USER = "postgres"
 HOST = "localhost"
 PORT = 5432
 DBNAME = "tpch"
-dbgen_workdir = ""
+dbgen_workdir = FULL_PATH
 dbgen_executable = "dbgen"
-SCHEMA_PATH = 'schema.sql'
-INDEX_PATH = 'tpch_index.sql'
+SCHEMA_PATH = f'{FULL_PATH}/schema.sql'
+INDEX_PATH = f'{FULL_PATH}/tpch_index.sql'
 
 TPCH_TABLE_MAP = {
     'customer': 'c',
@@ -76,7 +78,7 @@ def ingest_table_chunk(user, host, port,
 
     print(f'Running {cmd} | {sed_cmd} | {ingest_cmd}')
     proc = Popen(f'{cmd} | {sed_cmd} | {ingest_cmd}',
-                 shell=True,
+                 shell=True, cwd=dbgen_workdir,
                  stdout=PIPE, stderr=PIPE)
 
 
