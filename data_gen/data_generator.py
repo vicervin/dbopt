@@ -30,6 +30,7 @@ TPCH_TABLE_MAP = {
 def generate_data(scale_factor):
 
         chunks = math.ceil(scale_factor / 2)
+        print(f'Generating and ingesting Data for scale factor {scale_factor}')
 
         # max_workers is not given, so it defaults to the number of processors on the machine
         with ProcessPoolExecutor() as executor:
@@ -60,6 +61,7 @@ def generate_data(scale_factor):
                 if future.exception():
                     raise AirflowException(f'DBGen failed in {identifier} '
                                            f'with the exception {future.exception()}')
+        print(f"Data generated successfully for scale factor {scale_factor}")
 
 def ingest_table_chunk(user, host, port,
                        dbname, dbgen_workdir, dbgen_executable,
@@ -111,6 +113,10 @@ def run_psql_cmd(psql_cmd, db=True, file_=True):
 
 def run(scale_factor):
     run_psql_cmd(f'"CREATE DATABASE {DBNAME};"', db=False, file_=False )
+    print('Generating Schema')
     run_psql_cmd(SCHEMA_PATH)
     generate_data(scale_factor)
+    print('Creating Indexes')
     run_psql_cmd(INDEX_PATH)
+    print('Indexes Created')
+
