@@ -14,7 +14,7 @@ SCALE_FACTOR = 1
 CONTAINER_NAME = f'{BENCHMARK}_{str(SCALE_FACTOR)}'
 DATA_PATH = "/home/ervin/Documents/Uni/Thesis/data_backups/"+CONTAINER_NAME
 #QUERIES = [14,2,9,#20,6,#17,#18,8,#21,13,3,22,16,4,11,15,1,10,19,5,7,12]
-QUERIES = [14,2,9,"20_rewritten",6,"17_rewritten",8,"21",13,3,22,16,4,11,15,1,10,19,5,7,12]
+QUERIES = [14,2,9,"20_rewritten",6,"17_rewritten",8,13,3,22,16,4,11,15,1,10,19,5,7,12]
 #QUERIES = [14,2,9,6,8,13,3,22,16,4,11,15,1,10,19,5,7,12]
 
 confDict = {
@@ -39,7 +39,7 @@ def run_tpch(confDict, scale_factor):
         pg_container = start_postgres(scale_factor)
         set_config(confDict)
         times = run_queries()
-        save_run(confDict, times)
+        save_run(confDict, times, scale_factor)
         stop_postgres()
         return times
     except Exception as e:
@@ -61,13 +61,13 @@ def stop_postgres():
             pg_container.remove()
 
 def wait_for_pg_to_start(db=database):
-    for i in range(1,10):
+    for i in range(1,100):
         try:
             with psycopg2.connect(f'host={server} dbname={db} user={username} password={password}') as cnxn:
                 return
         except psycopg2.Error as e:
             time.sleep(6)
-    raise Exception("Database takes more than 60 seconds to start")
+    raise Exception("Database takes more than 10 minutes to start")
 
 def start_postgres(scale_factor):
     try:
@@ -78,7 +78,7 @@ def start_postgres(scale_factor):
             environment={"PGDATA": "postgres/data"},
             ports={5432: 5432},
             name=CONTAINER_NAME,
-            shm_size='1G')
+            shm_size='3G')
         wait_for_pg_to_start("postgres")
         # TODO: Clear caches
         return current_pg
@@ -86,15 +86,6 @@ def start_postgres(scale_factor):
 
     except docker.errors.APIError as e :
         print(e)
-    # try:        
-    #     Popen(['docker','run', '-d', '-p', '5432:5432', '--name', CONTAINER_NAME, 
-    #     '-v', f'{DATA_PATH}:/var/lib/postgresql/data', 'postgres'],check=True)
-    # except Exception as e:
-    #     print(e)
-    #     Popen(['docker', 'stop', CONTAINER_NAME])
-    #     Popen(['docker', 'rm', CONTAINER_NAME])
-    #     Popen(['docker','run', '-d', '-p', '5432:5432', '--name', CONTAINER_NAME, 
-    #     '-v', f'{DATA_PATH}:/var/lib/postgresql/data', 'postgres'])
 
 def check_config(confDict):
     failed_config = []
@@ -114,6 +105,7 @@ def check_config(confDict):
     #    print("Configurationss Successfully set")
 
 def check_data(scale_factor):
+    print(f'Checking Data Consistency for tpch:{scale_factor}')
     rowsDict = { "nation": 25,
     "customer":  150000,
     "part":  200000,
@@ -130,9 +122,10 @@ def check_data(scale_factor):
             print(f'!!! Data Mismatch : Expected table {param} is missing!!!') 
             return False
         current_val = result[0][0]
-        if (abs(current_val - val) / current_val) > 0.01 :
+        if (abs(current_val - val) / val) > 0.01 :
             print(f'!!! Data Mismatch : Expected no of rows for table {param} is "{val}" current value is {current_val}') 
             return False
+    print(f'Data is Consistent for tpch:{scale_factor}')    
     return True
 
 def pg_cmd(cmd, autocommit = False, timeout=0):
@@ -163,20 +156,21 @@ def run_queries():
         start = time.time()
         pg_cmd(open(f"queries/{query}.sql", "r").read())
         times[query] = time.time() - start
-        print(str(count+1) + " : Query "+ str(QUERIES[count]) + "| time : "+ str(time.time() - start) )
+        #print(str(count+1) + " : Query "+ str(QUERIES[count]) + "| time : "+ str(time.time() - start) )
         count += 1
-    print("Total Query time : "+ str(sum(times.values())))
+    times['Total'] = sum(times.values())
+    print("Total Query time : "+ str(times['Total']))
     return times
 
-def save_run(confDict, times):
+def save_run(confDict, times, scale_factor):
     dumpDict = {"workload":CONTAINER_NAME, "input": confDict, "output": times }
-    with open(f'../results/{time.time()}.json', 'w') as fp:
+    with open(f'../results/{round(time.time())}_{BENCHMARK}_{str(scale_factor)}.json', 'w') as fp:
         json.dump(dumpDict, fp)
 
 def build_image(scale_factor):
     image_name = f'{BENCHMARK}:{str(scale_factor)}'
     try:
-        client = docker.from_env()
+        client = docker.from_env(timeout=600)
         if client.images.list(name=image_name):
             container = client.containers.run(
                 image=image_name,
@@ -219,5 +213,6 @@ def build_image(scale_factor):
     except docker.errors.APIError as e :
         print(e)
 
-run_tpch(confDict,1)
-#build_image(1)
+#run_tpch(confDict,1)
+#build_image(10)
+#print(str(check_data(10)))
