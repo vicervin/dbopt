@@ -20,9 +20,15 @@ from smac.tae.execute_func import ExecuteTAFuncDict
 from smac.scenario.scenario import Scenario
 from smac.facade.smac_facade import SMAC
 import runTpch
+import pandas as pd
+import time
 
 # We load the iris-dataset (a widely used benchmark)
 iris = datasets.load_iris()
+df_results = pd.DataFrame()
+scale_factor = 30
+iterations = 25
+runTpch.build_image(scale_factor)
 
 def svm_from_cfg(cfg):
     """ Creates a SVM based on a configuration and evaluates it on the
@@ -60,8 +66,13 @@ def benchmark_from_cfg(cfg):
     if 'effective_cache_size' in cfg:
         cfg['effective_cache_size'] = str(cfg['effective_cache_size'])+"GB"
     cfg.pop('shared_buffers',None)
-    times = runTpch.run_tpch(cfg,1)
-    return sum(times.values())
+    times = runTpch.run_tpch(cfg,scale_factor)
+    dict_results = {}
+    dict_results.update({ f'conf_{k}': cfg[k] for k in cfg})
+    dict_results.update({ f'queryTimes_{k}': times[k] for k in times})
+    global df_results
+    df_results = df_results.append(dict_results,ignore_index=True)
+    return times['Total']
 
 #logger = logging.getLogger("SVMExample")
 logging.basicConfig(level=logging.INFO)  # logging.DEBUG for debug output
@@ -111,7 +122,7 @@ cs.add_hyperparameters([work_mem, temp_buffers, shared_buffers, effective_cache_
 
 # Scenario object
 scenario = Scenario({"run_obj": "quality",   # we optimize quality (alternatively runtime)
-                     "runcount-limit": 25,  # maximum function evaluations
+                     "runcount-limit": iterations,  # maximum function evaluations
                      "cs": cs,               # configuration space
                      "deterministic": "true"
                      })
@@ -138,3 +149,5 @@ smac.validate(config_mode='inc',      # We can choose which configurations to ev
               #instance_mode='train+test',  # Defines what instances to validate
               repetitions=100,        # Ignored, unless you set "deterministic" to "false" in line 95
 n_jobs=1) # How many cores to use in parallel for optimization
+
+df_results.to_csv(f'../results/{time.time()}_tpch_{scale_factor}.csv')
