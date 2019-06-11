@@ -12,7 +12,7 @@ def crunch_json(fn):
     fn = fn.split('/')[-1]
     dictRun.update({ f'timestamp': fn.split('_')[0]})
     dictRun.update({ f'benchmark': fn.split('_')[1]})
-    dictRun.update({ f'scale_factor': fn.split('_')[2]})
+    dictRun.update({ f'scale_factor': fn.split('_')[2].split('.')[0]})
     return dictRun
 
 
@@ -24,7 +24,10 @@ def csv_generate(mydir):
     df = pd.DataFrame()
     for json in onlyfiles:
         df = df.append(crunch_json(f'{mydir}/{json}'),ignore_index=True)
+    #print(df)
+    #df.columns=df.columns.str.strip()
+    df = df.sort_values('timestamp').reset_index(drop=True)
     df.to_csv(f'{mydir}/complete.csv')
     
 
-csv_generate('../tpch_10_50runs')
+csv_generate('../tpch_30runs')
