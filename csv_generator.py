@@ -10,9 +10,9 @@ def crunch_json(fn):
     dictRun.update({ f'conf_{k}': jsonRun['input'][k] for k in jsonRun['input']})
     dictRun.update({ f'queryTime_{k}': jsonRun['output'][k] for k in jsonRun['output']})
     fn = fn.split('/')[-1]
-    dictRun.update({ f'timestamp': fn.split('.')[0]})#fn.split('_')[0]})
-    dictRun.update({ f'benchmark': 'tpch'})#fn.split('_')[1]})
-    dictRun.update({ f'scale_factor': 10})#fn.split('_')[2]})
+    dictRun.update({ f'timestamp': fn.split('_')[0]})
+    dictRun.update({ f'benchmark': fn.split('_')[1]})
+    dictRun.update({ f'scale_factor': fn.split('_')[2]})
     return dictRun
 
 
