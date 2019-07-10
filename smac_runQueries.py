@@ -26,9 +26,9 @@ import time
 # We load the iris-dataset (a widely used benchmark)
 iris = datasets.load_iris()
 df_results = pd.DataFrame()
-scale_factor = 10
-iterations = 15
-reruns = 5
+scale_factor = 1
+iterations = 5
+reruns = 3
 runTpch.build_image(scale_factor)
 
 def svm_from_cfg(cfg):
