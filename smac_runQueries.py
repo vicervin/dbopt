@@ -26,8 +26,9 @@ import time
 # We load the iris-dataset (a widely used benchmark)
 iris = datasets.load_iris()
 df_results = pd.DataFrame()
-scale_factor = 30
-iterations = 25
+scale_factor = 10
+iterations = 15
+reruns = 5
 runTpch.build_image(scale_factor)
 
 def svm_from_cfg(cfg):
@@ -66,13 +67,20 @@ def benchmark_from_cfg(cfg):
     if 'effective_cache_size' in cfg:
         cfg['effective_cache_size'] = str(cfg['effective_cache_size'])+"GB"
     cfg.pop('shared_buffers',None)
-    times = runTpch.run_tpch(cfg,scale_factor)
-    dict_results = {}
-    dict_results.update({ f'conf_{k}': cfg[k] for k in cfg})
-    dict_results.update({ f'queryTimes_{k}': times[k] for k in times})
-    global df_results
-    df_results = df_results.append(dict_results,ignore_index=True)
-    return times['Total']
+    
+    score = 0
+    for i in range(reruns):
+        times = runTpch.run_tpch(cfg,scale_factor)
+        score = score + times['Total']
+    score = score / reruns
+
+    #dict_results = {}
+    #dict_results.update({ f'conf_{k}': cfg[k] for k in cfg})
+    #dict_results.update({ f'queryTimes_{k}': times[k] for k in times})
+    #global df_results
+    #df_results = df_results.append(dict_results,ignore_index=True)
+    #return times['Total']
+    return score
 
 #logger = logging.getLogger("SVMExample")
 logging.basicConfig(level=logging.INFO)  # logging.DEBUG for debug output
