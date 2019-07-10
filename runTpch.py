@@ -14,9 +14,9 @@ SCALE_FACTOR = 1
 CONTAINER_NAME = f'{BENCHMARK}_{str(SCALE_FACTOR)}'
 DATA_PATH = "/home/ervin/Documents/Uni/Thesis/data_backups/"+CONTAINER_NAME
 #QUERIES = [14,2,9,#20,6,#17,#18,8,#21,13,3,22,16,4,11,15,1,10,19,5,7,12]
-QUERIES = [14,2,9,"20_rewritten",6,"17_rewritten",8,13,3,22,16,4,11,15,1,10,19,5,7,12]
 #QUERIES = [14,2,9,6,8,13,3,22,16,4,11,15,1,10,19,5,7,12]
 
+QUERIES = [14,2,9,"20_rewritten",6,"17_rewritten",8,13,3,22,16,4,11,15,1,10,19,5,7,12]
 confDict = {
     "max_parallel_workers" : "8" ,
     "work_mem" : "2000MB" ,
@@ -78,6 +78,7 @@ def start_postgres(scale_factor):
             environment={"PGDATA": "postgres/data"},
             ports={5432: 5432},
             name=CONTAINER_NAME,
+            #volumes={'postgresql.conf': {'bind': 'postgresql/data/postgresql.conf', 'mode': 'rw'}},
             shm_size='3G')
         wait_for_pg_to_start("postgres")
         # TODO: Clear caches
@@ -148,6 +149,11 @@ def set_config(confDict):
         pg_cmd(f"ALTER SYSTEM SET {param} = '{confDict[param]}';", autocommit=True)
     pg_cmd(f"SELECT pg_reload_conf();")
     check_config(confDict)            
+
+def write_config_file(fn, confDict):
+    with open(fn, 'w') as fp :
+        for param, val in confDict.items():
+            fp.writelines(f'{param} = {val}\n')
 
 def run_queries():
     times = {}
