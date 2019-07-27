@@ -78,6 +78,8 @@ def start_postgres(scale_factor):
             environment={"PGDATA": "postgres/data"},
             ports={5432: 5432},
             name=CONTAINER_NAME,
+            links={'dbopt_py_1':'dbopt'},
+            network='dbopt_default',
             #volumes={'postgresql.conf': {'bind': 'postgresql/data/postgresql.conf', 'mode': 'rw'}},
             shm_size='3G')
         wait_for_pg_to_start("postgres")
@@ -183,6 +185,8 @@ def build_image(scale_factor):
                 detach=True,
                 environment={"PGDATA": "postgres/data"},
                 ports={5432: 5432},
+                links={'dbopt_py_1':'dbopt'},
+                network='dbopt_default',
                 name=CONTAINER_NAME)
             wait_for_pg_to_start('postgres')
             if check_data(scale_factor):
