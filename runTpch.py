@@ -203,6 +203,7 @@ def build_image(scale_factor):
                         image='postgres:latest',
                         detach=True,
                         ports={5432: 5432},
+                        network='dbopt_default',
                         name=CONTAINER_NAME)
         wait_for_pg_to_start('postgres')
         data_generator.run(scale_factor)
