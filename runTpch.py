@@ -5,14 +5,17 @@ from data_gen import data_generator
 import json
 import time
 
-server = 'localhost'
-database = 'tpch'
-username = 'postgres'
-password = 'postgres'
 BENCHMARK = 'tpch'
 SCALE_FACTOR = 1
 CONTAINER_NAME = f'{BENCHMARK}_{str(SCALE_FACTOR)}'
 DATA_PATH = "/home/ervin/Documents/Uni/Thesis/data_backups/"+CONTAINER_NAME
+
+#server = 'localhost'
+server = CONTAINER_NAME
+database = 'tpch'
+username = 'postgres'
+password = 'postgres'
+
 #QUERIES = [14,2,9,#20,6,#17,#18,8,#21,13,3,22,16,4,11,15,1,10,19,5,7,12]
 #QUERIES = [14,2,9,6,8,13,3,22,16,4,11,15,1,10,19,5,7,12]
 
