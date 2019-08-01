@@ -4,11 +4,14 @@ from subprocess import Popen, run
 from data_gen import data_generator
 import json
 import time
+import os
 
 BENCHMARK = 'tpch'
 SCALE_FACTOR = 1
 CONTAINER_NAME = f'{BENCHMARK}_{str(SCALE_FACTOR)}'
-DATA_PATH = "/home/ervin/Documents/Uni/Thesis/data_backups/"+CONTAINER_NAME
+
+DBOPT_PATH = os.path.abspath(os.path.dirname(__file__))
+DATA_PATH = DBOPT_PATH+"/data_backups/"+CONTAINER_NAME
 
 #server = 'localhost'
 server = CONTAINER_NAME
@@ -165,7 +168,7 @@ def run_queries():
     count = 0
     for query in QUERIES:
         start = time.time()
-        pg_cmd(open(f"queries/{query}.sql", "r").read())
+        pg_cmd(open(f"{DBOPT_PATH}/queries/{query}.sql", "r").read())
         times[query] = time.time() - start
         #print(str(count+1) + " : Query "+ str(QUERIES[count]) + "| time : "+ str(time.time() - start) )
         count += 1
@@ -175,7 +178,7 @@ def run_queries():
 
 def save_run(confDict, times, scale_factor):
     dumpDict = {"workload":CONTAINER_NAME, "input": confDict, "output": times }
-    with open(f'../results/{round(time.time())}_{BENCHMARK}_{str(scale_factor)}.json', 'w') as fp:
+    with open(f'{DBOPT_PATH}/results/{round(time.time())}_{BENCHMARK}_{str(scale_factor)}.json', 'w') as fp:
         json.dump(dumpDict, fp)
 
 def build_image(scale_factor):
