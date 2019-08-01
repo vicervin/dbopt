@@ -104,7 +104,7 @@ def run_psql_cmd(psql_cmd, db=True, file_=True):
     if db:
         psql_cmd = f"-d {DBNAME} {psql_cmd}"
 
-    proc = Popen(f'psql -h localhost -U postgres {psql_cmd}',
+    proc = Popen(f'psql -h {HOST} -U postgres {psql_cmd}',
                     shell=True,
                     stdout=PIPE, stderr=PIPE)
 
