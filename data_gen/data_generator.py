@@ -8,7 +8,8 @@ import os
 FULL_PATH = os.path.dirname(os.path.abspath(__file__))
 
 USER = "postgres"
-HOST = "localhost"
+#HOST = "localhost"
+HOST = "tpch_1"
 PORT = 5432
 DBNAME = "tpch"
 dbgen_workdir = FULL_PATH
