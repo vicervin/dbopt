@@ -19,6 +19,7 @@ from ConfigSpace.conditions import InCondition
 from smac.tae.execute_func import ExecuteTAFuncDict
 from smac.scenario.scenario import Scenario
 from smac.facade.smac_facade import SMAC
+from runTpch import DBOPT_PATH
 import runTpch
 import pandas as pd
 import time
@@ -158,4 +159,4 @@ smac.validate(config_mode='inc',      # We can choose which configurations to ev
               repetitions=100,        # Ignored, unless you set "deterministic" to "false" in line 95
 n_jobs=1) # How many cores to use in parallel for optimization
 
-df_results.to_csv(f'../results/{time.time()}_tpch_{scale_factor}.csv')
+df_results.to_csv(f'{DBOPT_PATH}/results/{time.time()}_tpch_{scale_factor}.csv')
