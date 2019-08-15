@@ -196,8 +196,11 @@ def build_image(scale_factor):
                 detach=True,
                 environment={"PGDATA": CONTAINER_MOUNT_PATH},
                 ports={5432: 5432},
+<<<<<<< HEAD
                 links={'dbopt_py_1':'dbopt'},
                 network='dbopt_default',
+=======
+>>>>>>> e7fd92e421661bf172ba6342c2b1e48c9f40a626
                 volumes={f'{DATA_PATH}_{scale_factor}': {'bind': CONTAINER_MOUNT_PATH, 'mode': 'rw'}},
                 name=CONTAINER_NAME)
             wait_for_pg_to_start('postgres')
@@ -217,7 +220,10 @@ def build_image(scale_factor):
                         image='postgres:latest',
                         detach=True,
                         ports={5432: 5432},
+<<<<<<< HEAD
                         network='dbopt_default',
+=======
+>>>>>>> e7fd92e421661bf172ba6342c2b1e48c9f40a626
                         volumes={f'{DATA_PATH}_{scale_factor}': {'bind': '/var/lib/postgresql/data/', 'mode': 'rw'}},
                         name=CONTAINER_NAME)
         wait_for_pg_to_start('postgres')
