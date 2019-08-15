@@ -58,7 +58,7 @@ def run_tpch(confDict, scale_factor):
 
 
 def stop_postgres():
-    docker_client = docker.from_env()  
+    docker_client = docker.from_env(timeout=600)  
     running_pgs = docker_client.containers.list(all=True,filters={'ancestor':'postgres'})
     #running_pgs_ = docker_client.containers.list(all=True,filters={'ancestor':f'{BENCHMARK}:{str(scale_factor)}'})
     #running_pgs.extend(x for x in running_pgs_ if x not in running_pgs)
@@ -78,7 +78,7 @@ def wait_for_pg_to_start(db=database):
 
 def start_postgres(scale_factor):
     try:
-        docker_client = docker.from_env()
+        docker_client = docker.from_env(timeout=600)
         current_pg = docker_client.containers.run(
             #image=f'{BENCHMARK}:{str(scale_factor)}',
             image='postgres:latest',
@@ -196,11 +196,8 @@ def build_image(scale_factor):
                 detach=True,
                 environment={"PGDATA": CONTAINER_MOUNT_PATH},
                 ports={5432: 5432},
-<<<<<<< HEAD
                 links={'dbopt_py_1':'dbopt'},
                 network='dbopt_default',
-=======
->>>>>>> e7fd92e421661bf172ba6342c2b1e48c9f40a626
                 volumes={f'{DATA_PATH}_{scale_factor}': {'bind': CONTAINER_MOUNT_PATH, 'mode': 'rw'}},
                 name=CONTAINER_NAME)
             wait_for_pg_to_start('postgres')
@@ -220,10 +217,7 @@ def build_image(scale_factor):
                         image='postgres:latest',
                         detach=True,
                         ports={5432: 5432},
-<<<<<<< HEAD
                         network='dbopt_default',
-=======
->>>>>>> e7fd92e421661bf172ba6342c2b1e48c9f40a626
                         volumes={f'{DATA_PATH}_{scale_factor}': {'bind': '/var/lib/postgresql/data/', 'mode': 'rw'}},
                         name=CONTAINER_NAME)
         wait_for_pg_to_start('postgres')
