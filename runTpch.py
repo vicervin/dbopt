@@ -11,7 +11,8 @@ SCALE_FACTOR = 1
 CONTAINER_NAME = f'{BENCHMARK}_{str(SCALE_FACTOR)}'
 
 DBOPT_PATH = os.path.abspath(os.path.dirname(__file__))
-DATA_PATH = DBOPT_PATH+"/data_backups/"+CONTAINER_NAME
+DATA_PATH = "/tmp/dbopt_data_backups/"+BENCHMARK
+CONTAINER_MOUNT_PATH = '/postgres/data'
 
 #server = 'localhost'
 server = CONTAINER_NAME
@@ -79,14 +80,16 @@ def start_postgres(scale_factor):
     try:
         docker_client = docker.from_env()
         current_pg = docker_client.containers.run(
-            image=f'{BENCHMARK}:{str(scale_factor)}',
+            #image=f'{BENCHMARK}:{str(scale_factor)}',
+            image='postgres:latest',
             detach=True,
-            environment={"PGDATA": "postgres/data"},
+            environment={"PGDATA": CONTAINER_MOUNT_PATH},
             ports={5432: 5432},
             name=CONTAINER_NAME,
             links={'dbopt_py_1':'dbopt'},
             network='dbopt_default',
             #volumes={'postgresql.conf': {'bind': 'postgresql/data/postgresql.conf', 'mode': 'rw'}},
+            volumes={f'{DATA_PATH}_{scale_factor}': {'bind': CONTAINER_MOUNT_PATH, 'mode': 'rw'}},
             shm_size='3G')
         wait_for_pg_to_start("postgres")
         # TODO: Clear caches
@@ -185,14 +188,15 @@ def build_image(scale_factor):
     image_name = f'{BENCHMARK}:{str(scale_factor)}'
     try:
         client = docker.from_env(timeout=600)
-        if client.images.list(name=image_name):
+        #if client.images.list(name=image_name):
+        if os.path.exists(f'{DATA_PATH}_{scale_factor}'):
             container = client.containers.run(
-                image=image_name,
+                #image=image_name,
+                image='postgres:latest',
                 detach=True,
-                environment={"PGDATA": "postgres/data"},
+                environment={"PGDATA": CONTAINER_MOUNT_PATH},
                 ports={5432: 5432},
-                links={'dbopt_py_1':'dbopt'},
-                network='dbopt_default',
+                volumes={f'{DATA_PATH}_{scale_factor}': {'bind': CONTAINER_MOUNT_PATH, 'mode': 'rw'}},
                 name=CONTAINER_NAME)
             wait_for_pg_to_start('postgres')
             if check_data(scale_factor):
@@ -200,16 +204,18 @@ def build_image(scale_factor):
                 stop_postgres()
                 return True
             else :
-                print(f"Deleting corrupted image {image_name}")
-                stop_postgres()
-                client.images.remove(image=image_name)
-                print("Building a new image")
+                print(f'Data folder {DATA_PATH}_{scale_factor} does not match the scale_factor. please DELETE it then re-run ')
+                raise Exception(f" PLEASE DELETE CORRUPTED DATA FOLDER {DATA_PATH}_{scale_factor}")
+                # print(f"Deleting corrupted image {image_name}")
+                # stop_postgres()
+                # client.images.remove(image=image_name)
+                # print("Building a new image")
     
         container = client.containers.run(
                         image='postgres:latest',
                         detach=True,
                         ports={5432: 5432},
-                        network='dbopt_default',
+                        volumes={f'{DATA_PATH}_{scale_factor}': {'bind': '/var/lib/postgresql/data/', 'mode': 'rw'}},
                         name=CONTAINER_NAME)
         wait_for_pg_to_start('postgres')
         data_generator.run(scale_factor)
@@ -222,7 +228,7 @@ def build_image(scale_factor):
         result = client.containers.get(CONTAINER_NAME).exec_run(cmd="cp -r /var/lib/postgresql/data/ /postgres/")
         if result.exit_code == 1 :
             print(f"Error in Commiting container to image, {result.output}")
-        container.commit(repository=BENCHMARK, tag=scale_factor)
+        #container.commit(repository=BENCHMARK, tag=scale_factor)
         stop_postgres()
         print(f"Building of image {image_name} successfully complete")
         return True
