@@ -62,12 +62,12 @@ def svm_from_cfg(cfg):
 def benchmark_from_cfg(cfg):
     cfg = {k: cfg[k] for k in cfg if cfg[k]}
 
-    for parameter in ['work_mem', 'temp_buffers', 'shared_buffers', 'maintenance_work_mem']:
+    for parameter in ['work_mem', 'temp_buffers', 'maintenance_work_mem']:
         cfg[parameter] = str(cfg[parameter])+"MB"
 
     if 'effective_cache_size' in cfg:
         cfg['effective_cache_size'] = str(cfg['effective_cache_size'])+"GB"
-    cfg.pop('shared_buffers',None)
+    #cfg.pop('shared_buffers',None)
     
     score = 0
     for i in range(reruns):
@@ -107,7 +107,7 @@ seq_page_cost = UniformIntegerHyperparameter("seq_page_cost", 1, 16, default_val
 random_page_cost = UniformIntegerHyperparameter("random_page_cost", 1, 16, default_value=4)
 
 #shrinking = CategoricalHyperparameter("shrinking", ["true", "false"], default_value="true")
-cs.add_hyperparameters([work_mem, temp_buffers, shared_buffers, effective_cache_size, maintenance_work_mem,
+cs.add_hyperparameters([work_mem, temp_buffers, effective_cache_size, maintenance_work_mem,
                         max_parallel_workers, effective_io_concurrency, seq_page_cost, random_page_cost])
 
 # # Others are kernel-specific, so we can add conditions to limit the searchspace
