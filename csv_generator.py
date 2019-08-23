@@ -17,7 +17,7 @@ def crunch_json(fn):
 
 
 #print(crunch_json('../results/1560200984_tpch_30.json'))
-def csv_generate(mydir):
+def csv_generate(mydir, csv_name='run_summary'):
     #mydir = os.getcwd()+ '/'+ mydir
     print(mydir)
     onlyfiles = [f for f in os.listdir(mydir) if isfile(join(mydir, f)) and f.endswith('.json')]
@@ -27,7 +27,7 @@ def csv_generate(mydir):
     #print(df)
     #df.columns=df.columns.str.strip()
     df = df.sort_values('timestamp').reset_index(drop=True)
-    df.to_csv(f'{mydir}/complete.csv')
+    df.to_csv(f'{mydir}/{csv_name}.csv')
     
 
-csv_generate('../tpch_30runs')
+#csv_generate('../tpch_30runs')

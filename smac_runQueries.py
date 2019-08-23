@@ -5,7 +5,10 @@ Note: SMAC-documentation uses linenumbers to generate docs from this file.
 """
 
 import logging
+import time
+import pandas as pd
 import numpy as np
+from os import mkdir
 from sklearn import svm, datasets
 from sklearn.model_selection import cross_val_score
 
@@ -19,18 +22,21 @@ from ConfigSpace.conditions import InCondition
 from smac.tae.execute_func import ExecuteTAFuncDict
 from smac.scenario.scenario import Scenario
 from smac.facade.smac_facade import SMAC
-from runTpch import DBOPT_PATH
+
 import runTpch
-import pandas as pd
-import time
+import csv_generator
+from runTpch import DBOPT_PATH
 
 # We load the iris-dataset (a widely used benchmark)
 iris = datasets.load_iris()
 df_results = pd.DataFrame()
 scale_factor = 1
 iterations = 5
-reruns = 3
+reruns = 1
+RESULTS_DIR = f"{time.strftime('%Y%m%d%H%M')}_{scale_factor}g_{iterations}_{reruns}"
+
 runTpch.build_image(scale_factor)
+mkdir(f'{DBOPT_PATH}/results/{RESULTS_DIR}')
 
 def svm_from_cfg(cfg):
     """ Creates a SVM based on a configuration and evaluates it on the
@@ -71,7 +77,7 @@ def benchmark_from_cfg(cfg):
     
     score = 0
     for i in range(reruns):
-        times = runTpch.run_tpch(cfg,scale_factor)
+        times = runTpch.run_tpch(cfg,scale_factor,f'{DBOPT_PATH}/results/{RESULTS_DIR}')
         score = score + times['Total']
     score = score / reruns
 
@@ -159,4 +165,5 @@ smac.validate(config_mode='inc',      # We can choose which configurations to ev
               repetitions=100,        # Ignored, unless you set "deterministic" to "false" in line 95
 n_jobs=1) # How many cores to use in parallel for optimization
 
-df_results.to_csv(f'{DBOPT_PATH}/results/{time.time()}_tpch_{scale_factor}.csv')
+df_results.to_csv(f'{DBOPT_PATH}/results/{RESULTS_DIR}/{time.time()}_tpch_{scale_factor}.csv')
+csv_generator.csv_generate(f'{DBOPT_PATH}/results/{RESULTS_DIR}', RESULTS_DIR)

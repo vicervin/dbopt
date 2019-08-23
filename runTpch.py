@@ -38,14 +38,14 @@ confDict = {
     "random_page_cost" : "4" 
     }
 
-def run_tpch(confDict, scale_factor):
+def run_tpch(confDict, scale_factor, results_dir=f'{DBOPT_PATH}/results'):
     try:
         #data_path = copy_data_dir(str_schema_scale)
         stop_postgres()
         pg_container = start_postgres(scale_factor)
         set_config(confDict)
         times = run_queries()
-        save_run(confDict, times, scale_factor)
+        save_run(confDict, times, scale_factor, results_dir)
         stop_postgres()
         return times
     except Exception as e:
@@ -176,13 +176,14 @@ def run_queries():
     print("Total Query time : "+ str(times['Total']))
     return times
 
-def save_run(confDict, times, scale_factor):
+def save_run(confDict, times, scale_factor, results_dir):
     dumpDict = {"workload":CONTAINER_NAME, "input": confDict, "output": times }
-    with open(f'{DBOPT_PATH}/results/{round(time.time())}_{BENCHMARK}_{str(scale_factor)}.json', 'w') as fp:
+    with open(f'{results_dir}/{round(time.time())}_{BENCHMARK}_{str(scale_factor)}.json', 'w') as fp:
         json.dump(dumpDict, fp)
 
 def build_image(scale_factor):
     image_name = f'{BENCHMARK}:{str(scale_factor)}'
+    stop_postgres()
     try:
         client = docker.from_env(timeout=600)
         if client.images.list(name=image_name):
