@@ -3,6 +3,7 @@ import docker
 import traceback
 from subprocess import Popen, run
 from data_gen.data_generator import DataGenerator
+from kubernetes_api import KubernetesAPI
 import json
 import time
 import os
@@ -49,20 +50,41 @@ class QueryRunner:
         
 
     def run_tpch(self, confDict):
-        try:
-            self.stop_postgres()
-            pg_container = self.start_postgres()
-            self.set_config(confDict)
-            times = self.run_queries()
-            self.save_run(confDict, times, self.results_dir)
-            self.stop_postgres()
-            return times
-        except Exception as e:
-            print('runTpch failed due to an Exception:',e)
-            traceback.print_exc()
-            self.stop_postgres()
-            print("Tpch Run has failed and No Query Times returned")
-            return None
+        
+        if not self.running_on_kubernetes:
+            try:
+                self.stop_postgres()
+                pg_container = self.start_postgres()
+                self.set_config(confDict)
+                times = self.run_queries()
+                self.save_run(confDict, times, self.results_dir)
+                self.stop_postgres()
+                return times
+            except Exception as e:
+                print('runTpch failed due to an Exception:',e)
+                traceback.print_exc()
+                self.stop_postgres()
+                print("Tpch Run has failed and No Query Times returned")
+                return None
+        else:
+            
+                kube = KubernetesAPI()
+                kube.deploy_yaml()
+                if not kube.app_exists():
+                    raise Exception('pod failed to start after deployment')
+                pod = kube.get_pods_ip()[0]
+                self.host = pod['ip']
+                DataGenerator(host=self.host).run(self.scale_factor)
+                if not self.check_data():
+                    raise Exception('pod failed to start after deployment')
+                self.set_config(confDict)
+                times = self.run_queries()
+                self.save_run(confDict, times, self.results_dir)
+                kube.delete_pod(app_name=pod['name'])
+                return times
+
+
+                
 
 
 
