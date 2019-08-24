@@ -86,7 +86,8 @@ class SmacRunner:
         query_runner = QueryRunner(
             scale_factor=self.scale_factor, 
             dockerized=self.dockerized,
-            results_dir=self.results_dir)
+            results_dir=self.results_dir
+            on_cluster=self.on_cluster)
         score = 0
         for i in range(self.reruns):
             times = query_runner.run_tpch(cfg)
@@ -102,8 +103,8 @@ class SmacRunner:
         return score
 
     def run(self):
-
-        QueryRunner(scale_factor=self.scale_factor, dockerized=self.dockerized).build_image()
+        if not self.on_cluster:
+            QueryRunner(scale_factor=self.scale_factor, dockerized=self.dockerized).build_image()
         mkdir(f'{DBOPT_PATH}/results/{self.results_dir}')
         
         #logger = logging.getLogger("SVMExample")
