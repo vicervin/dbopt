@@ -44,7 +44,7 @@ class DataGenerator:
                 for table_name, table_code in TPCH_TABLE_MAP.items():
                     # These two are too small and dbgen seems to have a bug.
                     if table_name in ['region', 'nation']:
-                        future = executor.submit(ingest_table_chunk,
+                        future = executor.submit(self.ingest_table_chunk,
                                                 self.user, self.password, self.host, self.port, self.dbname,
                                                 dbgen_workdir, dbgen_executable,
                                                 scale_factor,
@@ -52,7 +52,7 @@ class DataGenerator:
                         futures[future] = f'{table_name}'
                     else:
                         for build_steps in range(1, chunks + 1):
-                            future = executor.submit(ingest_table_chunk,
+                            future = executor.submit(self.ingest_table_chunk,
                                                     self.user, self.password, self.host, self.port, self.dbname,
                                                     dbgen_workdir, dbgen_executable,
                                                     scale_factor,
@@ -79,8 +79,8 @@ class DataGenerator:
 
         sed_cmd = r'sed s/\|$//'
 
-        ingest_cmd = (f'psql -U {user} --password {password} -h {host} -p {port} '
-                    f'-d {dbname} -c "COPY '
+        ingest_cmd = (f'psql  "postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.dbname}" '
+                    f' -c "COPY '
                     f'{table_name} FROM STDIN WITH DELIMITER \'|\'"')
 
         print(f'Running {cmd} | {sed_cmd} | {ingest_cmd}')
@@ -105,10 +105,12 @@ class DataGenerator:
         else :
             psql_cmd = '-c ' + psql_cmd
         
-        if db:
-            psql_cmd = f"-d {self.dbname} {psql_cmd}"
+        if not db:
+            db_name = 'postgres'
+        else:
+            db_name = self.dbname
 
-        proc = Popen(f'psql -h {self.host} -p {self.port} -U {self.user} --password {self.password} {psql_cmd}',
+        proc = Popen(f'psql "postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{db_name}" {psql_cmd}',
                         shell=True,
                         stdout=PIPE, stderr=PIPE)
 
@@ -117,11 +119,11 @@ class DataGenerator:
                 raise Exception(f'command "{plain_cmd}" failed, error : {error}')
 
     def run(self,scale_factor):
-        run_psql_cmd(f'"CREATE DATABASE {self.dbname};"', db=False, file_=False )
+        self.run_psql_cmd(f'"CREATE DATABASE {self.dbname};"', db=False, file_=False )
         print('Generating Schema')
-        run_psql_cmd(SCHEMA_PATH)
-        generate_data(scale_factor)
+        self.run_psql_cmd(SCHEMA_PATH)
+        self.generate_data(scale_factor)
         print('Creating Indexes')
-        run_psql_cmd(INDEX_PATH)
+        self.run_psql_cmd(INDEX_PATH)
         print('Indexes Created')
 

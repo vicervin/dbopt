@@ -91,8 +91,6 @@ class QueryRunner:
     def stop_postgres(self):
         docker_client = docker.from_env()  
         running_pgs = docker_client.containers.list(all=True,filters={'ancestor':'postgres'})
-        #running_pgs_ = docker_client.containers.list(all=True,filters={'ancestor':f'{BENCHMARK}:{str(scale_factor)}'})
-        #running_pgs.extend(x for x in running_pgs_ if x not in running_pgs)
         if running_pgs != []:
             for pg_container in running_pgs:
                 pg_container.stop()
@@ -267,9 +265,9 @@ class QueryRunner:
             DataGenerator(
                 user=self.user, password=self.password, 
                 dbname=self.dbname, host=self.host, port=self.port
-                ).run(scale_factor)
+                ).run(self.scale_factor)
 
-            if not self.check_data(scale_factor):
+            if not self.check_data():
                 print(f"Building of image {image_name} failed due to inconsistent data")
                 return False
             result = client.containers.get(self.container_name).exec_run(cmd="mkdir /postgres")
@@ -278,7 +276,7 @@ class QueryRunner:
             result = client.containers.get(self.container_name).exec_run(cmd="cp -r /var/lib/postgresql/data/ /postgres/")
             if result.exit_code == 1 :
                 print(f"Error in Commiting container to image, {result.output}")
-            container.commit(repository=self.benchmark, tag=scale_factor)
+            container.commit(repository=self.benchmark, tag=self.scale_factor)
             self.stop_postgres()
             print(f"Building of image {image_name} successfully complete")
             return True
@@ -288,4 +286,4 @@ class QueryRunner:
 
 #run_tpch(confDict,1)
 #build_image(10)
-#print(str(check_data(10)))
+#print(str(check_data()))
