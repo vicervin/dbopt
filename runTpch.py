@@ -69,7 +69,7 @@ class QueryRunner:
         else:
             
                 kube = KubernetesAPI()
-                kube.deploy_yaml()
+                #kube.create_deployment()
                 if not kube.app_exists():
                     raise Exception('pod failed to start after deployment')
                 pod = kube.get_pods_ip()[0]
@@ -80,7 +80,7 @@ class QueryRunner:
                 self.set_config(confDict)
                 times = self.run_queries()
                 self.save_run(confDict, times, self.results_dir)
-                kube.delete_pod(app_name=pod['name'])
+                kube.delete_pod(pod_name=pod['name'])
                 return times
 
 

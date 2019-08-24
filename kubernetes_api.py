@@ -36,7 +36,7 @@ class KubernetesAPI:
             print('Deployment failed to delete')
 
 
-    def app_exists(self, app_name):
+    def app_exists(self, app_name='postgres'):
         if self.get_pods_ip(app_name):
                 return True
         for i in range(4):
@@ -45,6 +45,7 @@ class KubernetesAPI:
                 return True
         print(f"No Running pods of App '{app_name}'")
         return False
+        
     def delete_everything(self, app_name):
         api_instance = client.CoreV1Api()
         namespace = self.namespace # str | object name and auth scope, such as for teams and projects
