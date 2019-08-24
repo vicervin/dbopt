@@ -31,9 +31,6 @@ class QueryRunner:
 
     def __init__(self, user='postgres', host='localhost', port=5432, dbname='tpch', password='postgres',
                         benchmark='tpch', scale_factor=1, dockerized = False, results_dir=f'{DBOPT_PATH}/results'):
-        self.host = host
-        if dockerized:
-            self.host = self.container_name
         self.user = user
         self.password = password
         self.port = port
@@ -43,6 +40,11 @@ class QueryRunner:
         self.container_name = f'{benchmark}_{scale_factor}'
         self.dockerized = dockerized
         self.results_dir = results_dir
+        
+        self.host = host
+        if dockerized:
+            self.host = self.container_name
+        
 
         
 
