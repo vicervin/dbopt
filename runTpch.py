@@ -30,7 +30,7 @@ confDict = {
 
 class QueryRunner:
 
-    def __init__(self, user='postgres', host='localhost', port=5432, dbname='tpch', password='postgres',
+    def __init__(self, user='postgres', host='localhost', port=5432, dbname='tpch', password='postgres', on_cluster=False,
                         benchmark='tpch', scale_factor=1, dockerized = False, results_dir=f'{DBOPT_PATH}/results'):
         self.user = user
         self.password = password
@@ -41,7 +41,7 @@ class QueryRunner:
         self.container_name = f'{benchmark}_{scale_factor}'
         self.dockerized = dockerized
         self.results_dir = results_dir
-        
+        self.on_cluster= on_cluster
         self.host = host
         if dockerized:
             self.host = self.container_name
@@ -51,7 +51,7 @@ class QueryRunner:
 
     def run_tpch(self, confDict):
         
-        if not self.running_on_kubernetes:
+        if not self.on_cluster:
             try:
                 self.stop_postgres()
                 pg_container = self.start_postgres()

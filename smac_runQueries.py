@@ -36,11 +36,12 @@ iris = datasets.load_iris()
 
 class SmacRunner:
 
-    def __init__(self, scale_factor=1, iterations=3, reruns=1, dockerized=False, results_dir=None):
+    def __init__(self, scale_factor=1, iterations=3, reruns=1, dockerized=False, results_dir=None, on_cluster=False):
         self.scale_factor = scale_factor
         self.iterations = iterations
         self.reruns = reruns
         self.dockerized = dockerized
+        self.on_cluster = on_cluster
         if results_dir is None:
             self.results_dir = f"{time.strftime('%Y%m%d%H%M%s')}_{scale_factor}g_{iterations}_{reruns}"
 
@@ -201,6 +202,10 @@ if __name__ == '__main__':
 
     args_to_parse.add_argument('--dockerized', required=False, default=False, action='store_true', help=(
         'If instance is running from inside a docker container'
+    ))
+    
+    args_to_parse.add_argument('--on_cluster', required=False, default=False, action='store_true', help=(
+        'If instance is running from inside a Kubernetes cluster'
     ))
     
     args_to_parse.add_argument('--results_dir', required=False, type=str, help=(
