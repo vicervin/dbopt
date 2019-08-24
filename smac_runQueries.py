@@ -86,7 +86,7 @@ class SmacRunner:
         query_runner = QueryRunner(
             scale_factor=self.scale_factor, 
             dockerized=self.dockerized,
-            results_dir=self.results_dir
+            results_dir=self.results_dir,
             on_cluster=self.on_cluster)
         score = 0
         for i in range(self.reruns):

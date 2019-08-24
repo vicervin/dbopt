@@ -116,7 +116,7 @@ class DataGenerator:
         if proc.returncode != 0:
                 raise Exception(f'command "{plain_cmd}" failed, error : {error}')
 
-    def run(scale_factor):
+    def run(self,scale_factor):
         run_psql_cmd(f'"CREATE DATABASE {self.dbname};"', db=False, file_=False )
         print('Generating Schema')
         run_psql_cmd(SCHEMA_PATH)
