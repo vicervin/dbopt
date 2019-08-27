@@ -53,8 +53,8 @@ def create_csv_summary(results_dir, runs_list):
                 df_avg = df_avg.append(df_avg_.loc[row_index], ignore_index=True)
                 df_avg.loc[idx,'iteration'] = idx
             df_avg['Experiment_name'] = run+'_avg_singled'
-        df = df.append(df_avg_, ignore_index=True)
-        df = df.append(df_avg, ignore_index=True)          
+            df = df.append(df_avg_, ignore_index=True)
+            df = df.append(df_avg, ignore_index=True)          
     df.to_csv(f'{results_dir}/summary.csv')
 
 #create_csv_summary('results', remote_results)
