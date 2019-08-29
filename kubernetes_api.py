@@ -45,7 +45,7 @@ class KubernetesAPI:
                 return True
         print(f"No Running pods of App '{app_name}'")
         return False
-        
+
     def delete_everything(self, app_name):
         api_instance = client.CoreV1Api()
         namespace = self.namespace # str | object name and auth scope, such as for teams and projects
@@ -58,9 +58,15 @@ class KubernetesAPI:
         
     def delete_pod(self, pod_name):
         api_instance = client.CoreV1Api()
-        api_response = api_instance.delete_namespaced_pod(pod_name, self.namespace)
-        print(api_response)
-        
+        for i in range(4):
+            api_response = api_instance.delete_namespaced_pod(pod_name, self.namespace)
+            print(api_response)
+            snooze(30)
+            for pod in self.get_pods_ip():
+                if pod_name == pod['name']:
+                    return
+        print(f"Pod {pod_name} failed to delete after 4 tries in 2mins")
+            
     def get_pods_ip(self, app_name='postgres'):
         api_instance = client.CoreV1Api()
         namespace = self.namespace # str | object name and auth scope, such as for teams and projects
