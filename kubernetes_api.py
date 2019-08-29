@@ -1,7 +1,7 @@
 from os import path
 
 import yaml
-
+import sleep from time
 from kubernetes import client, config
 
 class KubernetesAPI:
@@ -40,7 +40,7 @@ class KubernetesAPI:
         if self.get_pods_ip(app_name):
                 return True
         for i in range(4):
-            snooze(15)
+            sleep(15)
             if self.get_pods_ip(app_name):
                 return True
         print(f"No Running pods of App '{app_name}'")
@@ -61,7 +61,7 @@ class KubernetesAPI:
         for i in range(4):
             api_response = api_instance.delete_namespaced_pod(pod_name, self.namespace)
             print(api_response)
-            snooze(30)
+            sleep(30)
             for pod in self.get_pods_ip():
                 if pod_name == pod['name']:
                     return
