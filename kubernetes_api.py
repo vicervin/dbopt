@@ -1,7 +1,7 @@
 from os import path
 
 import yaml
-import sleep from time
+from time import sleep
 from kubernetes import client, config
 
 class KubernetesAPI:
