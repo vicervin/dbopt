@@ -58,14 +58,19 @@ class KubernetesAPI:
         
     def delete_pod(self, pod_name):
         api_instance = client.CoreV1Api()
-        for i in range(4):
-            api_response = api_instance.delete_namespaced_pod(pod_name, self.namespace)
+        for i in range(8):
+            try:
+                api_response = api_instance.delete_namespaced_pod(pod_name, self.namespace)
+            except client.rest.ApiException as e:
+                print(e)
+                print('Pod failed to delete. Probably died already')
+
             print(api_response)
-            sleep(30)
-            for pod in self.get_pods_ip():
-                if pod_name == pod['name']:
-                    return
-        print(f"Pod {pod_name} failed to delete after 4 tries in 2mins")
+            sleep(15)
+            if pod_name not in [pod['name'] for pod in self.get_pods_ip()]:
+                return
+                    
+        print(f"Pod {pod_name} failed to delete after 8 tries in 2mins")
             
     def get_pods_ip(self, app_name='postgres'):
         api_instance = client.CoreV1Api()
