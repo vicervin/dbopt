@@ -74,7 +74,14 @@ class QueryRunner:
                     raise Exception('pod failed to start after deployment')
                 pod = kube.get_pods_ip()[0]
                 self.host = pod['ip']
-                DataGenerator(host=self.host).run(self.scale_factor)
+                try:
+                    DataGenerator(host=self.host).run(self.scale_factor)
+                except:
+                    kube.delete_pod(pod_name=pod['name'])
+                    pod = kube.get_pods_ip()[0]
+                    self.host = pod['ip']
+                    DataGenerator(host=self.host).run(self.scale_factor)
+
                 if not self.check_data():
                     raise Exception('pod failed to start after deployment')
                 self.set_config(confDict)
