@@ -45,7 +45,7 @@ class SmacRunner:
         self.on_cluster = on_cluster
         self.parallel = parallel
         self.label= label
-        self.seed = seed
+        self.seed = int(seed)
         if results_dir is None:
             self.results_dir = f"{time.strftime('%Y%m%d%H%M%s')}_{scale_factor}g_{iterations}_{reruns}"
 
