@@ -84,7 +84,7 @@ class QueryRunner:
                     DataGenerator(host=self.host).run(self.scale_factor)
 
                 if not self.check_data():
-                    raise Exception('pod failed to start after deployment')
+                    raise Exception('postgres pod failed the data consistency check, Ingest went wrong')
                 self.set_config(confDict)
                 times = self.run_queries()
                 self.save_run(confDict, times, self.results_dir)
