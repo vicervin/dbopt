@@ -1,4 +1,4 @@
-from os import path
+from os import path, system
 
 import yaml
 from time import sleep
@@ -37,11 +37,11 @@ class KubernetesAPI:
 
 
     def app_exists(self, app_name='postgres'):
-        if self.get_pods_ip(app_name):
+        if self.get_pods(app_name):
                 return True
         for i in range(4):
             sleep(15)
-            if self.get_pods_ip(app_name):
+            if self.get_pods(app_name):
                 return True
         print(f"No Running pods of App '{app_name}'")
         return False
@@ -53,7 +53,7 @@ class KubernetesAPI:
         #_continue = '_continue_example' # str | The continue option should be set when retrieving more results from the server. Since this value is server defined, kubernetes.clients may only use the continue value from a previous query result with identical query parameters (except for the value of continue) and the server may reject a continue value it does not recognize. If the specified continue value is no longer valid whether due to expiration (generally five to fifteen minutes) or a configuration change on the server, the server will respond with a 410 ResourceExpired error together with a continue token. If the kubernetes.client needs a consistent list, it must restart their list without the continue field. Otherwise, the kubernetes.client may send another list request with the token received with the 410 error, the server will respond with a list starting from the next key, but from the latest snapshot, which is inconsistent from the previous list results - objects that are created, modified, or deleted after the first list request will be included in the response, as long as their keys are after the \"next key\".  This field is not supported when watch is true. Clients may start a watch from the last resourceVersion value returned by the server and not miss any modifications. (optional)
         field_selector = 'status.phase=Running' # str | A selector to restrict the list of returned objects by their fields. Defaults to everything. (optional)
         label_selector = f'app={app_name}' # str | A selector to restrict the list of returned objects by their labels. Defaults to everything. (optional)
-        for pod in self.get_pods_ip():
+        for pod in self.get_pods():
             api_response = api_instance.delete_namespaced_pod(pod['name'], self.namespace)
         
     def delete_pod(self, pod_name):
@@ -67,12 +67,12 @@ class KubernetesAPI:
 
             print(api_response)
             sleep(15)
-            if pod_name not in [pod['name'] for pod in self.get_pods_ip()]:
+            if pod_name not in [pod['name'] for pod in self.get_pods()]:
                 return
                     
         print(f"Pod {pod_name} failed to delete after 8 tries in 2mins")
             
-    def get_pods_ip(self, app_name='postgres'):
+    def get_pods(self, app_name='postgres'):
         api_instance = client.CoreV1Api()
         namespace = self.namespace # str | object name and auth scope, such as for teams and projects
         #pretty = 'pretty_example' # str | If 'true', then the output is pretty printed. (optional)
@@ -89,15 +89,52 @@ class KubernetesAPI:
             api_response = api_instance.list_namespaced_pod(namespace,field_selector=field_selector, label_selector=label_selector)
             list_ip = []
             for pod in api_response.items:
-                list_ip.append({'ip':pod.status.pod_ip, 'name':pod.metadata.name})
+                list_ip.append({'ip':pod.status.pod_ip, 'name':pod.metadata.name, 'status':pod.metadata.labels['status']})
 
             print(list_ip)
             return list_ip
             #pprint(api_response)
         except ApiException as e:
             print("Exception when calling CoreV1Api->list_namespaced_pod: %s\n" % e)
+    
+    def reserve_pod(self, label):
+        if label == None:
+            return self.get_pods()[0]
+        pods = self.get_pods() 
+        api_instance = client.CoreV1Api()
+        for pod in pods:
+            if pod['status']=='FreshlyStarted':
+                resp = system(f'kubectl label pods {pod["name"]} dbopt={label}')
+                if resp == 0: # and api_instance.read_namespaced_pod(name=pod["name"], namespace=self.namespace).metadata.labels['dbopt'] == label:
+                    system(f'kubectl label pods {pod["name"]} status=dbopt{label} --overwrite')
+                    print(f'Pod {pod["name"]} is now reserved for dbopt{label}')
+                    pod['status'] = api_instance.read_namespaced_pod(name=pod["name"], namespace=self.namespace).metadata.labels['status']
+                    return pod
+        return None
+    
+    def reserve_pod_in_a_loop(self,label):
+        if label == None:
+            return self.get_pods()[0]
+        while True:
+            pod = self.reserve_pod(label)
+            if pod is not None:
+                return pod
+            sleep(2)
 
-#pods = KubernetesAPI().get_pods_ip()
+            
+# import sys
+# kb = KubernetesAPI()
+# for i in range(10):
+#     while True:
+#         pod = kb.reserve_pod(sys.argv[1])
+#         if pod is not None:
+#             break
+#         sleep(2)
+#     sleep(10)
+#     kb.delete_pod(pod['name'])
+
+
+#pods = KubernetesAPI().get_pods()
 #KubernetesAPI().delete_pod(app_name=pods[0]['name'])
 
 # if __name__ == '__main__'

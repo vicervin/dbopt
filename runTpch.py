@@ -31,7 +31,7 @@ confDict = {
 class QueryRunner:
 
     def __init__(self, user='postgres', host='localhost', port=5432, dbname='tpch', password='postgres', on_cluster=False,
-                        benchmark='tpch', scale_factor=1, dockerized = False, results_dir=f'{DBOPT_PATH}/results'):
+                        benchmark='tpch', scale_factor=1, dockerized = False, results_dir=f'{DBOPT_PATH}/results', label=None):
         self.user = user
         self.password = password
         self.port = port
@@ -43,6 +43,7 @@ class QueryRunner:
         self.results_dir = results_dir
         self.on_cluster= on_cluster
         self.host = host
+        self.label=label
         if dockerized:
             self.host = self.container_name
         
@@ -72,13 +73,13 @@ class QueryRunner:
                 #kube.create_deployment()
                 if not kube.app_exists():
                     raise Exception('pod failed to start after deployment')
-                pod = kube.get_pods_ip()[0]
+                pod = kube.reserve_pod_in_a_loop(self.label)
                 self.host = pod['ip']
                 try:
                     DataGenerator(host=self.host).run(self.scale_factor)
                 except:
                     kube.delete_pod(pod_name=pod['name'])
-                    pod = kube.get_pods_ip()[0]
+                    pod = kube.reserve_pod_in_a_loop(self.label)
                     self.host = pod['ip']
                     DataGenerator(host=self.host).run(self.scale_factor)
 

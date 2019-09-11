@@ -36,12 +36,16 @@ iris = datasets.load_iris()
 
 class SmacRunner:
 
-    def __init__(self, scale_factor=1, iterations=3, reruns=1, dockerized=False, results_dir=None, on_cluster=False):
+    def __init__(self, scale_factor=1, iterations=3, reruns=1, dockerized=False, results_dir=None, on_cluster=False,
+                label=None, seed=42, parallel=False):
         self.scale_factor = scale_factor
         self.iterations = iterations
         self.reruns = reruns
         self.dockerized = dockerized
         self.on_cluster = on_cluster
+        self.parallel = parallel
+        self.label= label
+        self.seed = seed
         if results_dir is None:
             self.results_dir = f"{time.strftime('%Y%m%d%H%M%s')}_{scale_factor}g_{iterations}_{reruns}"
 
@@ -87,6 +91,7 @@ class SmacRunner:
             scale_factor=self.scale_factor, 
             dockerized=self.dockerized,
             results_dir=self.results_dir,
+            label=self.label,
             on_cluster=self.on_cluster)
         score = 0
         for i in range(self.reruns):
@@ -106,6 +111,9 @@ class SmacRunner:
         if not self.on_cluster:
             QueryRunner(scale_factor=self.scale_factor, dockerized=self.dockerized).build_image()
         mkdir(f'{DBOPT_PATH}/results/{self.results_dir}')
+        if self.parallel:
+            parallel_dir = f'{DBOPT_PATH}/results/{self.results_dir}/parallel'
+            mkdir(f'{DBOPT_PATH}/results/{self.results_dir}/parallel')
         
         #logger = logging.getLogger("SVMExample")
         logging.basicConfig(level=logging.INFO)  # logging.DEBUG for debug output
@@ -159,7 +167,10 @@ class SmacRunner:
                             "cs": cs,               # configuration space
                             "deterministic": "true"
                             })
-
+        if self.parallel:
+            scenario = Scenario({"run_obj": "quality",  "runcount-limit": self.iterations, "cs": cs,
+                            "deterministic": "true", "shared_model":True, "input_psmac_dirs": parallel_dir
+                            }) 
         # Example call of the function
         # It returns: Status, Cost, Runtime, Additional Infos
         def_value = self.benchmark_from_cfg(cs.get_default_configuration())
@@ -167,7 +178,7 @@ class SmacRunner:
 
         # Optimize, using a SMAC-object
         print("Optimizing! Depending on your machine, this might take a few minutes.")
-        smac = SMAC(scenario=scenario, rng=np.random.RandomState(42),
+        smac = SMAC(scenario=scenario, rng=np.random.RandomState(self.seed),
                 tae_runner=self.benchmark_from_cfg)
 
         incumbent = smac.optimize()
@@ -213,6 +224,20 @@ if __name__ == '__main__':
         'Path for storing the results of this run'
     ))
 
+    args_to_parse.add_argument('--parallel', required=False, default=False, action='store_true', help=(
+        'If instance is running parallel SMAC runs'
+    ))
 
+    args_to_parse.add_argument('--label', required=False,default=None, help=(
+        'If parallel label for specific db pod'
+    ))
+
+    args_to_parse.add_argument('--seed', required=False, default=None, help=(
+        'If parallel label for different SMAC seed'
+    ))
+    
     args = args_to_parse.parse_args()
+    if args.parallel:
+        if args.label is None or args.seed is None:
+            argparse.ArgumentParser().error("Seed and label need to be set for parallel runs")
     SmacRunner(**vars(args)).run()
