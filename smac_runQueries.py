@@ -9,7 +9,7 @@ import time
 import argparse
 import pandas as pd
 import numpy as np
-from os import mkdir
+from os import mkdir, path
 from sklearn import svm, datasets
 from sklearn.model_selection import cross_val_score
 
@@ -48,6 +48,11 @@ class SmacRunner:
         self.seed = int(seed)
         if results_dir is None:
             self.results_dir = f"{time.strftime('%Y%m%d%H%M%s')}_{scale_factor}g_{iterations}_{reruns}"
+            if parallel:
+                self.results_dir = f"{time.strftime('%Y%m%d')}_{scale_factor}g_{iterations}_{reruns}"
+            
+
+
 
 
     
@@ -110,10 +115,14 @@ class SmacRunner:
     def run(self):
         if not self.on_cluster:
             QueryRunner(scale_factor=self.scale_factor, dockerized=self.dockerized).build_image()
-        mkdir(f'{DBOPT_PATH}/results/{self.results_dir}')
         if self.parallel:
             parallel_dir = f'{DBOPT_PATH}/results/{self.results_dir}/parallel'
-            mkdir(f'{DBOPT_PATH}/results/{self.results_dir}/parallel')
+            if not path.isdir(f'{DBOPT_PATH}/results/{self.results_dir}'):
+                mkdir(f'{DBOPT_PATH}/results/{self.results_dir}')
+            if not path.isdir(f'{DBOPT_PATH}/results/{self.results_dir}/parallel'):
+                mkdir(f'{DBOPT_PATH}/results/{self.results_dir}/parallel')
+        else:
+            mkdir(f'{DBOPT_PATH}/results/{self.results_dir}')
         
         #logger = logging.getLogger("SVMExample")
         logging.basicConfig(level=logging.INFO)  # logging.DEBUG for debug output
