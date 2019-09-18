@@ -23,6 +23,7 @@ from ConfigSpace.conditions import InCondition
 from smac.tae.execute_func import ExecuteTAFuncDict
 from smac.scenario.scenario import Scenario
 from smac.facade.smac_facade import SMAC
+from smac.facade.roar_facade import ROAR
 
 from runTpch import QueryRunner
 import csv_generator
@@ -37,14 +38,15 @@ iris = datasets.load_iris()
 class SmacRunner:
 
     def __init__(self, scale_factor=1, iterations=3, reruns=1, dockerized=False, results_dir=None, on_cluster=False,
-                label=None, seed=42, parallel=False):
+                label=None, seed=42, parallel=False, random=False):
         self.scale_factor = scale_factor
         self.iterations = iterations
         self.reruns = reruns
         self.dockerized = dockerized
         self.on_cluster = on_cluster
         self.parallel = parallel
-        self.label= label
+        self.label = label
+        self.random = random
         self.seed = int(seed)
         if results_dir is None:
             self.results_dir = f"{time.strftime('%Y%m%d%H%M%s')}_{scale_factor}g_{iterations}_{reruns}"
@@ -189,6 +191,9 @@ class SmacRunner:
         print("Optimizing! Depending on your machine, this might take a few minutes.")
         smac = SMAC(scenario=scenario, rng=np.random.RandomState(self.seed),
                 tae_runner=self.benchmark_from_cfg)
+        if self.random:
+            smac = ROAR(scenario=scenario, rng=np.random.RandomState(self.seed),
+                tae_runner=self.benchmark_from_cfg)
 
         incumbent = smac.optimize()
 
@@ -236,12 +241,16 @@ if __name__ == '__main__':
     args_to_parse.add_argument('--parallel', required=False, default=False, action='store_true', help=(
         'If instance is running parallel SMAC runs'
     ))
+    
+    args_to_parse.add_argument('--random', required=False, default=False, action='store_true', help=(
+        'If instance is running ROAR (Random Search) instead of SMAC'
+    ))
 
     args_to_parse.add_argument('--label', required=False,default=None, help=(
         'If parallel label for specific db pod'
     ))
 
-    args_to_parse.add_argument('--seed', required=False, default=None, help=(
+    args_to_parse.add_argument('--seed', required=False, help=(
         'If parallel label for different SMAC seed'
     ))
     
