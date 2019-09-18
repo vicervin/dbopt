@@ -39,11 +39,11 @@ class KubernetesAPI:
 
 
     def app_exists(self):
-        if self.get_pods(self.app_name):
+        if self.get_pods():
                 return True
         for i in range(4):
             sleep(15)
-            if self.get_pods(self.app_name):
+            if self.get_pods():
                 return True
         print(f"No Running pods of App '{self.app_name}'")
         return False
