@@ -1,0 +1,9 @@
+version: '3'
+services:
+  py:
+    build: .
+    #image: registry.hub.docker.com/vicervin/dbopt:1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: tail -f /dev/null
+    #command: python dbopt/smac_runQueries.py --scale_factor=1 --iterations=2 --dockerized
